@@ -11,7 +11,10 @@ class Location{
 
 	public:
 	Location()
-	{x = -1; y = -1;}
+	{
+		this->x = -1;
+		this->y = -1;
+	}
 	Location(int x, int y)
 	{
 		this->x = x;
@@ -32,76 +35,45 @@ class Node{
 	bool dead;
 	bool dest;
 	Node *next;
+	int **arr;
 	public:
-	Node(int x, int y, int **arr)
+	Node(Location cd, int **arr)
 	{
-		this->coordinates.set(x, y);
-		dead = false;
+		this->coordinates = cd;
+		this->dead = false;
 		this->next = NULL;
-		this->generate_queue(arr);
-		if(x==3 && y==3)
-		dest = true;
-//		Location coordinates(x, y);
+		this->arr = arr;
 	}
 
-	void set_coordinates(int x, int y)
+	void set_path(int x, int y)
 	{
-		coordinates.set(x, y);
+		if(arr[x][y] == 0)
+		{
+			Location obj(x, y);
+			possible_paths.push(obj);
+		}
 	}
 
 	void generate_queue(int **arr)
 	{
 		int x = this->coordinates.retx();
 		int y = this->coordinates.rety();
-		if(arr[x-1][y+1] == 0)
-		{
-		Location obj(x-1, y+1);
-		possible_paths.push(obj);
-		}
+		set_path(x-1, y+1);
+		set_path(x, y+1);
+		set_path(x+1, y+1);
+		set_path(x+1, y);
+		set_path(x+1, y-1);
+		set_path(x, y-1);
+		set_path(x-1, y-1);
+		set_path(x-1, y);
 
-		if(arr[x][y+1] == 0)
-		{
-		Location obj(x, y+1);
-		possible_paths.push(obj);
-		}
+		check_and_set_dead();
+	}
 
-		if(arr[x+1][y+1] == 0)
-		{
-		Location obj(x+1, y+1);
-		possible_paths.push(obj);
-		}
-
-		if(arr[x+1][y] == 0)
-		{
-		Location obj(x+1, y);
-		possible_paths.push(obj);
-		}
-
-		if(arr[x+1][y-1] == 0)
-		{
-		Location obj(x+1, y-1);
-		possible_paths.push(obj);
-		}
-
-		if(arr[x][y-1] == 0)
-		{
-		Location obj(x, y-1);
-		possible_paths.push(obj);
-		}
-
-		if(arr[x-1][y-1] == 0)
-		{
-		Location obj(x-1, y-1);
-		possible_paths.push(obj);
-		}
-
-		if(arr[x-1][y] == 0)
-		{
-		Location obj(x-1, y);
-		possible_paths.push(obj);
-		}
+	void check_and_set_dead()
+	{
 		if(possible_paths.empty())
-		dead = true;
+			this->dead = true;
 	}
 
 	void print_coordinates()
@@ -124,9 +96,28 @@ class Node{
 		}
 	}
 
-	Location ret_front(){ return possible_paths.front();}
-	void pop_front() { if(!possible_paths.empty()){possible_paths.pop();if(possible_paths.empty())this->dead = true;}}
-	Location ret_front_and_pop(){Location temp = this->ret_front(); this->pop_front(); return temp;}
+	bool is_dest()
+	{
+		return dest;
+	}
+
+	Location ret_front()
+	{
+		return possible_paths.front();
+	}
+
+	void pop_front()
+	{
+		if(!possible_paths.empty()){possible_paths.pop();
+		check_and_set_dead();
+	}
+
+	Location ret_front_and_pop()
+	{
+		Location temp = this->ret_front();
+		this->pop_front();
+		return temp;
+	}
 };
 
 class Path{
@@ -134,20 +125,21 @@ class Path{
 	Node *head;
 	Location destination;
 	int** maze;
-
+	Location start;
 	public:
-	Path(int **mz)
+	Path(int **mz, Location start, Location dest)
 	{
 		this->maze = mz;
-		destination.set(3,3);
-		head = new Node(1, 1, mz);
-		backtrack.push(head);
+		this->destination = dest;
+		this->start = start
+		this->head = new Node(start, mz);
+		this->backtrack.push(head);
 	}
 
 	Node* calculate_next(Node *node)
 	{
 		Location temp = node->ret_front();
-		Node *next_node = new Node(temp.retx(), temp.rety(), maze);
+		Node *next_node = new Node(temp, maze);
 		if(next_node->is_dead())
 		{
 			delete next_node;
@@ -160,12 +152,7 @@ class Path{
 
 	void find()
 	{
-		Node *first = calculate_next();
-		if(first!=NULL)
-		{
-		cout<<"first node: \t"; head->print_coordinates(); cout<<endl;
-		cout<<"second node: \t";first->print_coordinates();cout<<endl;
-		}
+
 	}
 
 };
