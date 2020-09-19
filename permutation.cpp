@@ -16,12 +16,14 @@ void swap(char *a, char *b);
 
 void generator(string a, int l, int r)
 {
+//	cout<<"function call"<<endl;
 	if(l==r)
 		cout<<a<<endl;
 	else
 	{
-		for(int i = 0; i <= r; i++)
+		for(int i = l; i <= r; i++)
 		{
+		//	cout<<"i: "<<i<<" l: "<<l<<" str: "<<a<<endl;
 			swap(a[l], a[i]);
 			generator(a, l+1, r);
 			swap(a[l], a[i]);
