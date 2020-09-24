@@ -63,7 +63,7 @@ class Node
 		if(arr[x][y] == 0)
 		{
 			Location obj(x, y);
-			if((obj ==  this->parent))
+			if(!(obj ==  this->parent))
 			possible_paths.push(obj);
 		}
 	}
@@ -86,8 +86,10 @@ class Node
 
 	void check_and_set_dead()
 	{
+		//cout<<"dead flag before: "<<dead<<endl;
 		if(possible_paths.empty())
 			this->dead = true;
+		//cout<<"dead flag after: "<<dead<<endl;
 	}
 
 	void print_coordinates()
@@ -97,6 +99,7 @@ class Node
 
 	bool is_dead()
 	{
+		//cout<<"func call "<<dead<<endl;
 		return this->dead;
 	}
 
@@ -188,20 +191,52 @@ class Path{
 
 	void find()
 	{
-		Node *t = calculate_next(head);
-		head->print_queue();
-		cout<<"=====\n\n";
-		t->print_queue();
-		//while(!current->is_dest())
-		//{
-		//}
-	}
+		cout<<"in\n";
+		while(!current->is_dest())
+		{
 
+			cout<<"first while current: "; current->print_coordinates(); cout<<endl<<endl;
+			cout<<"queue for current: ";current->print_queue();
+			cout<<"going into second while\n";
+			while(!current->is_dead())
+			{
+				cout<<"second while\n";
+				Node *temp = calculate_next(current);
+				if(temp == NULL)
+				continue;
+				current = temp;
+				backtrack.push(current);
+				cout<<"current is now changed to: \n";
+				current->print_coordinates(); cout<<endl;
+				if(current->is_dest())
+				{
+					cout<<"yayaya\n"; break;
+				}
+			}
+
+		 	//if(!backtrack.empty())
+                        //{
+                   //             backtrack.pop();
+		//		if(!backtrack.empty())
+                  //              	current = backtrack.top();
+		//		else
+		//			cout<<"Stack empty"<<endl;
+                  //      }
+			cout<<"-----------"<<endl;
+
+		}
+	}
 };
 
 int main()
 {
-	int maze[5][5] = {1,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,1,0,0,1,1,1,1,1,1};
+	int maze[5][5] = {
+			{1, 1, 1, 1, 1},
+			{1, 0, 0, 0, 1},
+			{1, 0, 1, 0, 1},
+			{1, 1, 1, 0, 1},
+			{1, 1, 1, 1, 1}
+			};
 	int **mz = new int*[5];
 	Location start(1, 1);
 	Location dest(3, 3);
