@@ -266,7 +266,7 @@ class Path{
 
 					else
 						{
-							cout<<"Stack empty"<<endl;
+							cout<<"A path cannot be generated :("<<endl;
 							break;
 						}
 				}
@@ -278,11 +278,13 @@ class Path{
 	{
 		stack<Node*> temp = backtrack;
 		cout<<"Printing the path..\n";
+		cout<<"| ";
 		while(!temp.empty())
 		{
 			temp.top()->print_coordinates(); cout<<" <-- ";
 			temp.pop();
 		}
+		cout<<"start |\n";
 	}
 };
 
@@ -293,9 +295,9 @@ int main()
 	int maze[r][c] = {
 			{1, 1, 1, 1, 1, 1},
 			{1, 0, 0, 0, 1, 1},
-			{1, 0, 1, 1, 1, 1},
-			{1, 0, 0, 0, 0, 1},
-			{1, 1, 1, 0, 0, 1},
+			{1, 1, 0, 1, 1, 1},
+			{1, 1, 0, 1, 1, 1},
+			{1, 0, 1, 1, 0, 1},
 			{1, 1, 1, 1, 1, 1}
 			};
 	int **mz = new int*[r];
