@@ -15,11 +15,13 @@ class Location{
 		this->x = -1;
 		this->y = -1;
 	}
+
 	Location(int x, int y)
 	{
 		this->x = x;
 		this->y = y;
 	}
+
 	void set(int x, int y)
 	{
 		this->x = x;
@@ -37,10 +39,35 @@ class Location{
 	int rety(){return this->y;}
 };
 
+// dead_obj is a variable to pass as parent for the first node (source)
 Location dead_obj(0,0);
+//visited is an array of locations to help in generating the possible_paths for a node avoiding repetition
+Location visited[50];
+int i = 0;
+//check returns if a location is already part of another node's possible queue
+bool check(Location obj)
+{
+	for(int j = 0; j < i; j++)
+	if(obj == visited[j])
+	return false;
+	return true;
+}
+//insert will insert a new location into the array
+bool insert(Location obj)
+{
+	visited[i] = obj;
+	i++;
+}
 
 class Node
 {
+	/// coordinates - x and y location of the node
+	/// possible_paths - a queue of locations where the mouse can go next - all 8 directions
+	/// dead - a boolean variable which is true if possible_paths is an empty queue
+	/// dest - a boolean variable which is true if it is the final destination (trigger handled in class Path)
+	/// parent - a location variable to skip adding the parent node into the queue of the current node (thus avoiding a cycle where nodes keep generating each other as possible paths)
+	/// arr - the actual maze to determine possible_paths
+
 	Location coordinates;
 	queue<Location> possible_paths;
 	bool dead;
@@ -48,26 +75,35 @@ class Node
 	int **arr;
 	Location parent;
 	public:
+
+	//constructor
 	Node(Location cd, int **arr, Location p)
 	{
 		this->coordinates = cd;
 		this->dead = false;
 		this->arr = arr;
 		this->set_dest_false();
+		this->parent.set(p.retx(), p.rety());
 		this->generate_queue();
-		this->parent = p;
 	}
 
+	//determines if (x, y) can be added as node in possible_paths
 	void set_path(int x, int y)
 	{
+		//checking if the path is blocked
 		if(arr[x][y] == 0)
 		{
 			Location obj(x, y);
-			if(!(obj ==  this->parent))
-			possible_paths.push(obj);
+			//checking that the (x, y) is not the parent and hasn't been visited before
+			if(!(obj ==  this->parent) && check(obj))
+			{
+				possible_paths.push(obj);
+				insert(obj);
+			}
 		}
 	}
 
+	//generating the queue by considering all 8 directions
 	void generate_queue()
 	{
 		int x = this->coordinates.retx();
@@ -81,15 +117,14 @@ class Node
 		set_path(x-1, y-1);
 		set_path(x-1, y);
 
+		//trigger to assign true to dead if possible_paths is empty
 		check_and_set_dead();
 	}
 
 	void check_and_set_dead()
 	{
-		//cout<<"dead flag before: "<<dead<<endl;
 		if(possible_paths.empty())
 			this->dead = true;
-		//cout<<"dead flag after: "<<dead<<endl;
 	}
 
 	void print_coordinates()
@@ -99,7 +134,6 @@ class Node
 
 	bool is_dead()
 	{
-		//cout<<"func call "<<dead<<endl;
 		return this->dead;
 	}
 
@@ -154,27 +188,34 @@ class Node
 };
 
 class Path{
+
+	/// backtrack - a stack to keep track of the nodes walked through till we reach the path
+	/// current - the current node we're at, starts with (1, 1)
+	/// start and destination - arbitrary locations passed during construction
+	/// maze - the actual maze
 	stack<Node*> backtrack;
-	Node *head;
 	Node *current;
+	Location start;
 	Location destination;
 	int** maze;
-	Location start;
 	public:
+
+	//constructor
 	Path(int **mz, Location start, Location dest)
 	{
 		this->maze = mz;
 		this->destination = dest;
 		this->start = start;
-		this->head = new Node(start, mz, dead_obj);
-		this->backtrack.push(head);
-		this->current = head;
+		this->current = new Node(start, mz, dead_obj);
+		this->backtrack.push(current);
 	}
 
+	//calculates the next node to go to given a node
 	Node* calculate_next(Node *node)
 	{
 		if(node->is_dead())
-			return NULL;
+		return NULL;
+		//pop one element from node's generated queue - possible_paths
 		Location temp = node->ret_front_and_pop();
 		Node *next_node = new Node(temp, maze, node->ret_location());
 		if(next_node->ret_location() == this->destination)
@@ -191,59 +232,79 @@ class Path{
 
 	void find()
 	{
-		cout<<"in\n";
+		// cout<<"in\n";
 		while(!current->is_dest())
 		{
 
-			cout<<"first while current: "; current->print_coordinates(); cout<<endl<<endl;
-			cout<<"queue for current: ";current->print_queue();
-			cout<<"going into second while\n";
 			while(!current->is_dead())
 			{
-				cout<<"second while\n";
+				cout<<"coordinates for current node: "; current->print_coordinates(); cout<<endl;
+				cout<<"queue for current node: ";current->print_queue(); cout<<endl;
 				Node *temp = calculate_next(current);
 				if(temp == NULL)
 				continue;
 				current = temp;
 				backtrack.push(current);
-				cout<<"current is now changed to: \n";
-				current->print_coordinates(); cout<<endl;
 				if(current->is_dest())
 				{
-					cout<<"yayaya\n"; break;
+					print_path();
+					break;
 				}
+				cout<<endl<<endl;
 			}
 
-		 	//if(!backtrack.empty())
-                        //{
-                   //             backtrack.pop();
-		//		if(!backtrack.empty())
-                  //              	current = backtrack.top();
-		//		else
-		//			cout<<"Stack empty"<<endl;
-                  //      }
-			cout<<"-----------"<<endl;
+			if(current->is_dead() && !current->is_dest())
+			{
+				if(!backtrack.empty())
+				{
+					backtrack.pop();
+					if(!backtrack.empty())
+					{
+						cout<<"backtracking...\n";
+						current = backtrack.top();
+					}
 
+					else
+						{
+							cout<<"Stack empty"<<endl;
+							break;
+						}
+				}
+			}
+		}
+	}
+
+	void print_path()
+	{
+		stack<Node*> temp = backtrack;
+		cout<<"Printing the path..\n";
+		while(!temp.empty())
+		{
+			temp.top()->print_coordinates(); cout<<" <-- ";
+			temp.pop();
 		}
 	}
 };
 
 int main()
 {
-	int maze[5][5] = {
-			{1, 1, 1, 1, 1},
-			{1, 0, 0, 0, 1},
-			{1, 0, 1, 0, 1},
-			{1, 1, 1, 0, 1},
-			{1, 1, 1, 1, 1}
+	int r, c;
+	r = c = 6;
+	int maze[r][c] = {
+			{1, 1, 1, 1, 1, 1},
+			{1, 0, 0, 0, 1, 1},
+			{1, 0, 1, 1, 1, 1},
+			{1, 0, 0, 0, 0, 1},
+			{1, 1, 1, 0, 0, 1},
+			{1, 1, 1, 1, 1, 1}
 			};
-	int **mz = new int*[5];
+	int **mz = new int*[r];
 	Location start(1, 1);
-	Location dest(3, 3);
-	for(int i = 0; i<5; i++)
-		mz[i] = new int[5];
-	for(int i = 0; i<5; i++)
-		for(int j = 0; j < 5; j++)
+	Location dest(4, 4);
+	for(int i = 0; i<r; i++)
+		mz[i] = new int[c];
+	for(int i = 0; i<r; i++)
+		for(int j = 0; j < c; j++)
 			mz[i][j] = maze[i][j];
 	Path obj(mz, start, dest);
 	obj.find();
