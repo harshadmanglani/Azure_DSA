@@ -108,11 +108,11 @@ class Node
 	{
 		int x = this->coordinates.retx();
 		int y = this->coordinates.rety();
+		set_path(x+1, y-1);
+		set_path(x+1, y+1);
 		set_path(x-1, y+1);
 		set_path(x, y+1);
-		set_path(x+1, y+1);
 		set_path(x+1, y);
-		set_path(x+1, y-1);
 		set_path(x, y-1);
 		set_path(x-1, y-1);
 		set_path(x-1, y);
